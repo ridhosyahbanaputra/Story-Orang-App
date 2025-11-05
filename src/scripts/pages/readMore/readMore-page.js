@@ -33,8 +33,8 @@ class ReadMorePage {
             <div id="map"></div>
             <p class="story-coordinates">
               <strong>Lokasi:</strong> <span id="story-location-name">Memuat...</span><br>
-              <strong>Latitude:</strong> <span id="story-lat">...</span><br>
-              <strong>Longitude:</strong> <span id="story-lon">...</span>
+              <strong>Cordinate:</strong> <span id="story-lat"></span> 
+              <span id="story-lon">...</span>
             </p>
           </div>
         </article>
