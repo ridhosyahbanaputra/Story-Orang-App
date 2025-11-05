@@ -15,7 +15,7 @@ Leaflet.Marker.prototype.options.icon = DefaultIcon;
 
 /**
  * @param {string} mapId
- * @param {function} onLocationChange 
+ * @param {function} onLocationChange
  */
 
 export function initMapPicker(mapId, onLocationChange) {
@@ -50,7 +50,8 @@ export function initMapPicker(mapId, onLocationChange) {
   const map = Leaflet.map(mapId, {
     center: [initialLat, initialLon],
     zoom: initialZoom,
-    layers: [tileLayers.Standard], 
+    layers: [tileLayers.Standard],
+    scrollWheelZoom: false,
   });
 
   Leaflet.control.layers(tileLayers).addTo(map);
@@ -64,15 +65,29 @@ export function initMapPicker(mapId, onLocationChange) {
   map.on("moveend", () => {
     onLocationChange(map.getCenter());
   });
+  if ("geolocation" in navigator) {
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const userLat = position.coords.latitude;
+        const userLon = position.coords.longitude;
+        map.setView([userLat, userLon], 20); 
+      },
 
+      (error) => {
+        console.warn("Gagal mendapatkan lokasi pengguna:", error.message);
+      }
+    );
+  } else {
+    console.warn("Geolocation tidak didukung oleh browser ini.");
+  }
   return map;
 }
 
 /**
- * @param {string} mapId 
- * @param {number} lat 
- * @param {number} lon 
- * @param {string} storyTitle 
+ * @param {string} mapId
+ * @param {number} lat
+ * @param {number} lon
+ * @param {string} storyTitle
  */
 export function initDetailPageMap(mapId, lat, lon, storyTitle) {
   const map = Leaflet.map(mapId, {
@@ -99,8 +114,8 @@ export function initDetailPageMap(mapId, lat, lon, storyTitle) {
 }
 
 /**
- * @param {string} mapId 
- * @returns {L.Map} 
+ * @param {string} mapId
+ * @returns {L.Map}
  */
 export function initHomePageMap(mapId) {
   const tileLayers = {
@@ -130,9 +145,10 @@ export function initHomePageMap(mapId) {
   };
 
   const map = Leaflet.map(mapId, {
-    center: [-2.5489, 118.0149], 
+    center: [-1, 123.0],
     zoom: 5,
-    layers: [tileLayers.Standard], 
+    layers: [tileLayers.Standard],
+    scrollWheelZoom: false,
   });
 
   Leaflet.control.layers(tileLayers).addTo(map);
