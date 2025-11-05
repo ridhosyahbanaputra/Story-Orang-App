@@ -9,6 +9,8 @@ const API_ENDPOINT = {
   ADD_NEW_STORY: `${CONFIG.BASE_URL}/stories`,
   REGISTER: `${CONFIG.BASE_URL}/register`,
   LOGIN: `${CONFIG.BASE_URL}/login`,
+
+  NOTIFICATIONS_SUBSCRIBE: `${CONFIG.BASE_URL}/notifications/subscribe`,
 };
 
 const ApiSource = {
@@ -122,6 +124,67 @@ const ApiSource = {
       body: JSON.stringify(userData),
     });
     return response.json();
+  },
+
+async sendSubscription(subscriptionData) {
+    const token = Auth.getToken(); 
+    if (!token) {
+      console.warn('User tidak login, subscription tidak dikirim.');
+      return;
+    }
+
+    try {
+      const response = await fetch(API_ENDPOINT.NOTIFICATIONS_SUBSCRIBE, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`, 
+        },
+        body: JSON.stringify(subscriptionData),
+      });
+
+      const responseJson = await response.json();
+      if (responseJson.error) {
+        throw new Error(responseJson.message);
+      }
+
+      console.log('Subscription berhasil dikirim ke server:', responseJson.message);
+      return responseJson;
+
+    } catch (error) {
+      console.error('Gagal mengirim subscription ke server:', error);
+    }
+  },
+
+   async removeSubscription(endpoint) {
+    const token = Auth.getToken();
+    if (!token) {
+      console.warn('Tidak ada token, tidak bisa unsubscribe.');
+      return false; 
+    }
+
+    try {
+      const response = await fetch(API_ENDPOINT.NOTIFICATIONS_SUBSCRIBE, {
+        method: 'DELETE', 
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({ endpoint: endpoint }), 
+      });
+
+      const responseJson = await response.json();
+      if (responseJson.error) {
+        throw new Error(responseJson.message);
+      }
+
+      console.log('Unsubscribe dari server berhasil:', responseJson.message);
+      return true; 
+
+    } catch (error) {
+      console.error('Gagal unsubscribe dari server:', error);
+      return false; 
+    }
   },
 };
 

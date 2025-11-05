@@ -80,7 +80,44 @@ header {
 .brand-name {
   font-size: 1.125rem;
   font-weight: bold;
-  color: #333;
+  color: #000000;
+}
+
+.btn-subscribe-icon {
+  background: var(--color-bg);
+  border: none;
+  color: #000000;
+  padding: 10px 30px;
+  border-radius: 50px;
+  font-size: medium;
+  font-family: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  margin-right: 8px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  opacity: 0;
+  transition: opacity 0.3s ease, background-color 0.2s ease;
+}
+
+.btn-subscribe-icon.ready {
+  opacity: 1;
+}
+
+.btn-subscribe-icon:hover {
+  background-color: rgb(214, 110, 40);
+}
+
+.btn-subscribe-icon svg {
+  width: 20px;
+  height: 20px;
+  stroke: currentColor;
+}
+
+.btn-subscribe-icon:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 .drawer-button {
@@ -681,6 +718,53 @@ a:focus {
   border-radius: 6px;
 }
 
+.story-header {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+}
+
+.author-info {
+  flex-grow: 1;
+}
+
+.story-author {
+  margin-bottom: 0;
+}
+
+.story-date-detail {
+  margin-top: 4px;
+  margin-bottom: 0;
+}
+
+.btn-story-mark {
+  background: transparent;
+  border: none;
+  font-size: 0;
+  margin-bottom: 0;
+  color: var(--primary);
+  padding: 8px;
+  cursor: pointer;
+  transition: color 0.2s ease, transform 0.2s ease;
+}
+
+.btn-story-mark:hover {
+  color: var(--color-bg);
+  background: none;
+}
+
+.btn-story-mark svg {
+  width: 40px;
+  height: auto;
+  stroke: currentColor;
+  stroke-width: 2;
+}
+
+.btn-story-mark.marked {
+  color: var(--color-bg);
+  fill: var(--color-bg);
+}
+
 @supports not selector(:focus-visible) {
   html {
     --recent-pointer-mouse: 0;
@@ -742,6 +826,9 @@ footer p {
     min-height: auto;
     padding: 0;
     background: transparent;
+    display: flex;
+    align-items: center;
+    gap: 24px;
   }
   .nav-list {
     display: flex;
@@ -758,7 +845,10 @@ footer p {
   .main-header .drawer-button {
     margin-left: auto;
   }
-
+  .btn-subscribe-icon {
+    margin: 20px 0;
+    border-radius: 50px;
+  }
   .hero h1 {
     font-size: 2rem;
   }

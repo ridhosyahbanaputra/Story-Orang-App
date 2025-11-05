@@ -21,7 +21,7 @@ Leaflet.Marker.prototype.options.icon = DefaultIcon;
 export function initMapPicker(mapId, onLocationChange) {
   const initialLat = -6.2088;
   const initialLon = 106.8456;
-  const initialZoom = 12;
+  const initialZoom = 10;
 
   const tileLayers = {
     Standard: Leaflet.tileLayer(
@@ -70,7 +70,7 @@ export function initMapPicker(mapId, onLocationChange) {
       (position) => {
         const userLat = position.coords.latitude;
         const userLon = position.coords.longitude;
-        map.setView([userLat, userLon], 20); 
+        map.setView([userLat, userLon], 15); 
       },
 
       (error) => {

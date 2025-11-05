@@ -1,6 +1,7 @@
 import ApiSource from "../../data/api";
 import getPlaceName from "../../data/placeName-api";
 import { initHomePageMap, addMarkersToMap } from "../../utils/maps";
+import { showFormattedDate } from "../../utils/index";
 
 import feather from "feather-icons";
 import Swal from "sweetalert2";
@@ -75,14 +76,9 @@ class HomePage {
       });
 
       stories.forEach((story, index) => {
-        const formattedDate = new Date(story.createdAt).toLocaleDateString(
-          "id-ID",
-          {
-            day: "numeric",
-            month: "long",
-            year: "numeric",
-          }
-        );
+        
+        const formattedDate = showFormattedDate(story.createdAt, "id-ID");
+
         if (story.lat && story.lon) {
           const placeName = placeNames[index];
 
@@ -129,7 +125,7 @@ class HomePage {
 
           if (marker) {
             map.flyTo(marker.getLatLng(), 15);
-            marker.openPopup(); 
+            marker.openPopup();
           }
         }
       });
