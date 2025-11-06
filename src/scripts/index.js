@@ -4,10 +4,9 @@ import App from "./pages/app";
 import serviceWorkerRegister from "./utils/service-worker-register";
 import CONFIG from "./config.js";
 import ApiSource from "./data/api.js";
-import feather from "feather-icons"; 
+import feather from "feather-icons";
 import Swal from "sweetalert2";
 import "sweetalert2/dist/sweetalert2.min.css";
-
 
 function urlBase64ToUint8Array(base64String) {
   const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
@@ -72,7 +71,7 @@ async function unsubscribeFromPushNotification(swRegistration) {
       await swRegistration.pushManager.getSubscription();
     if (!existingSubscription) {
       console.log("Tidak ada subscription untuk di-unsubscribe.");
-      return true; 
+      return true;
     }
 
     const endpoint = existingSubscription.endpoint;
@@ -114,7 +113,7 @@ async function updateSubscriptionButton(swRegistration, button) {
   if (!button) return;
 
   if (Notification.permission === "denied") {
-    button.style.display = "none"; 
+    button.style.display = "none";
     return;
   }
 
@@ -128,7 +127,7 @@ async function updateSubscriptionButton(swRegistration, button) {
       "<span>Subsrcibe</span>" + feather.icons["bell-off"].toSvg();
     button.dataset.state = "unsubscribed";
   }
-  button.classList.add("ready"); 
+  button.classList.add("ready");
 }
 
 let app;
@@ -149,12 +148,12 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   const subscribeButton = document.querySelector("#subscribe-button");
   if (!("PushManager" in window)) {
-    subscribeButton.style.display = "none"; 
+    subscribeButton.style.display = "none";
   } else {
     await updateSubscriptionButton(swRegistration, subscribeButton);
 
     subscribeButton.addEventListener("click", async () => {
-      subscribeButton.disabled = true; 
+      subscribeButton.disabled = true;
 
       const currentState = subscribeButton.dataset.state;
       if (currentState === "unsubscribed") {
@@ -164,7 +163,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       }
 
       await updateSubscriptionButton(swRegistration, subscribeButton);
-      subscribeButton.disabled = false; 
+      subscribeButton.disabled = false;
     });
   }
 });

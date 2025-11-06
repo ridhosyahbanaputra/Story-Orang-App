@@ -76,7 +76,6 @@ class HomePage {
       });
 
       stories.forEach((story, index) => {
-        
         const formattedDate = showFormattedDate(story.createdAt, "id-ID");
 
         if (story.lat && story.lon) {

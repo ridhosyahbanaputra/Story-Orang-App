@@ -25,7 +25,7 @@ const ApiSource = {
         headers: {
           Authorization: `Bearer ${token}`,
         },
-        cache: "reload", 
+        cache: "reload",
       });
 
       if (!response.ok) {
@@ -126,19 +126,19 @@ const ApiSource = {
     return response.json();
   },
 
-async sendSubscription(subscriptionData) {
+  async sendSubscription(subscriptionData) {
     const token = Auth.getToken(); 
     if (!token) {
-      console.warn('User tidak login, subscription tidak dikirim.');
+      console.warn("User tidak login, subscription tidak dikirim.");
       return;
     }
 
     try {
       const response = await fetch(API_ENDPOINT.NOTIFICATIONS_SUBSCRIBE, {
-        method: 'POST',
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`, 
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`, 
         },
         body: JSON.stringify(subscriptionData),
       });
@@ -148,27 +148,29 @@ async sendSubscription(subscriptionData) {
         throw new Error(responseJson.message);
       }
 
-      console.log('Subscription berhasil dikirim ke server:', responseJson.message);
+      console.log(
+        "Subscription berhasil dikirim ke server:",
+        responseJson.message
+      );
       return responseJson;
-
     } catch (error) {
-      console.error('Gagal mengirim subscription ke server:', error);
+      console.error("Gagal mengirim subscription ke server:", error);
     }
   },
 
-   async removeSubscription(endpoint) {
+  async removeSubscription(endpoint) {
     const token = Auth.getToken();
     if (!token) {
-      console.warn('Tidak ada token, tidak bisa unsubscribe.');
+      console.warn("Tidak ada token, tidak bisa unsubscribe.");
       return false; 
     }
 
     try {
       const response = await fetch(API_ENDPOINT.NOTIFICATIONS_SUBSCRIBE, {
-        method: 'DELETE', 
+        method: "DELETE", 
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({ endpoint: endpoint }), 
       });
@@ -178,11 +180,10 @@ async sendSubscription(subscriptionData) {
         throw new Error(responseJson.message);
       }
 
-      console.log('Unsubscribe dari server berhasil:', responseJson.message);
+      console.log("Unsubscribe dari server berhasil:", responseJson.message);
       return true; 
-
     } catch (error) {
-      console.error('Gagal unsubscribe dari server:', error);
+      console.error("Gagal unsubscribe dari server:", error);
       return false; 
     }
   },
