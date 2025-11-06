@@ -154,7 +154,6 @@ class AddStory {
 
       if (capturedFiles.length === 0) {
         Swal.fire({
-          // Asumsi Swal diimpor
           icon: "warning",
           title: "Foto Kosong",
           text: "Anda harus mengupload setidaknya satu foto.",
@@ -183,7 +182,7 @@ class AddStory {
         formData.append("lat", parseFloat(lat));
         formData.append("lon", parseFloat(lon));
 
-        const response = await ApiSource.addNewStory(formData); // Asumsi ApiSource diimpor
+        const response = await ApiSource.addNewStory(formData); 
 
         await this.#cameraManager.stop();
 
