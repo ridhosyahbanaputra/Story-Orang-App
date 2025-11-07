@@ -1,5 +1,6 @@
 import ApiSource from "../../../data/api";
 import Auth from "../../../utils/auth";
+import DbHelper from "../../../utils/db-helper"; 
 import Swal from "sweetalert2";
 import "sweetalert2/dist/sweetalert2.min.css";
 
@@ -77,7 +78,10 @@ class LoginPage {
           throw new Error(response.message);
         }
 
-        Auth.saveToken(response.loginResult.token);
+        const token = response.loginResult.token;
+        Auth.saveToken(token); 
+
+        await DbHelper.putToken(token); 
 
         Swal.fire({
           icon: "success",

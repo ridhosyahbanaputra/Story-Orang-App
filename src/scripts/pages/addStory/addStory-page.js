@@ -4,6 +4,7 @@ import { initMapPicker } from "../../utils/maps";
 import markerIcon from "leaflet/dist/images/marker-icon.png";
 import Swal from "sweetalert2";
 import "sweetalert2/dist/sweetalert2.min.css";
+import DbHelper from "../../utils/db-helper";
 
 class AddStory {
   async render() {
@@ -74,7 +75,7 @@ class AddStory {
     let capturedFiles = [];
 
     const storyForm = document.querySelector("#storyForm");
-    const submitButton = document.querySelector("#submitButton"); // Penting untuk submit
+    const submitButton = document.querySelector("#submitButton"); 
     const storyPhotoInput = document.querySelector("#storyPhotoInput");
     const galleryButton = document.querySelector("#galleryButton");
     const thumbnailPreview = document.querySelector("#thumbnailPreview");
@@ -88,12 +89,12 @@ class AddStory {
       latInput.value = latlng.lat.toFixed(6);
       lonInput.value = latlng.lng.toFixed(6);
     };
-    initMapPicker("map-picker", updateInputs); 
+    initMapPicker("map-picker", updateInputs);
 
     const updatePreview = () => {
       thumbnailPreview.innerHTML = "";
       if (capturedFiles.length === 0) {
-        thumbnailPreview.appendChild(thumbnailPlaceholder); 
+        thumbnailPreview.appendChild(thumbnailPlaceholder);
         return;
       }
       capturedFiles.forEach((file, index) => {
@@ -135,7 +136,7 @@ class AddStory {
       updatePreview();
     };
 
-    this.#cameraManager = new Camera( 
+    this.#cameraManager = new Camera(
       {
         container: document.querySelector("#cameraViewContainer"),
         feed: document.querySelector("#cameraFeed"),
@@ -153,49 +154,69 @@ class AddStory {
       event.preventDefault();
 
       if (capturedFiles.length === 0) {
-        Swal.fire({
-          icon: "warning",
-          title: "Foto Kosong",
-          text: "Anda harus mengupload setidaknya satu foto.",
-        });
+        Swal.fire({ icon: "warning", title: "Foto Kosong", text: "..." });
         return;
       }
 
+      const description = document.querySelector("#storyDescription").value;
+      const lat = latInput.value;
+      const lon = lonInput.value;
+      const photo = capturedFiles[0]; 
+
       Swal.fire({
-        title: "Mengunggah Cerita...",
+        title: "Memproses...",
         text: "Mohon tunggu sebentar.",
         allowOutsideClick: false,
-        didOpen: () => {
-          Swal.showLoading();
-        },
+        didOpen: () => Swal.showLoading(),
       });
 
       try {
-        const description = document.querySelector("#storyDescription").value;
-        const lat = latInput.value;
-        const lon = lonInput.value;
-        const photo = capturedFiles[0];
+        if (navigator.onLine) {
+          console.log("Status: Online. Mengirim ke API...");
+          const formData = new FormData();
+          formData.append("description", description);
+          formData.append("photo", photo);
+          formData.append("lat", parseFloat(lat));
+          formData.append("lon", parseFloat(lon));
 
-        const formData = new FormData();
-        formData.append("description", description);
-        formData.append("photo", photo);
-        formData.append("lat", parseFloat(lat));
-        formData.append("lon", parseFloat(lon));
+          await ApiSource.addNewStory(formData);
 
-        const response = await ApiSource.addNewStory(formData); 
+          sessionStorage.setItem(
+            "storySuccessMessage",
+            "Cerita Anda berhasil dipublikasikan!"
+          );
+        } else {
+          console.log(
+            "Status: Offline. Menyimpan ke IndexedDB (Pending Stories)."
+          );
+
+          const storyData = {
+            id: new Date().toISOString(), 
+            description: description,
+            photo: photo, 
+            lat: parseFloat(lat),
+            lon: parseFloat(lon),
+          };
+          await DbHelper.addPendingStory(storyData);
+
+          if ("serviceWorker" in navigator && "SyncManager" in window) {
+            const swRegistration = await navigator.serviceWorker.ready;
+            await swRegistration.sync.register("sync-pending-stories");
+          }
+
+          sessionStorage.setItem(
+            "storySuccessMessage",
+            "Anda Offline. Cerita akan otomatis di-upload saat kembali online!"
+          );
+        }
 
         await this.#cameraManager.stop();
-
-        sessionStorage.setItem(
-          "storySuccessMessage",
-          "Cerita Anda berhasil dipublikasikan!"
-        );
         window.location.hash = "#/home";
         window.location.reload();
       } catch (error) {
         Swal.fire({
           icon: "error",
-          title: "Gagal Mengunggah",
+          title: "Gagal",
           text: error.message || "Terjadi kesalahan. Coba lagi.",
         });
       }

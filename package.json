@@ -26,6 +26,7 @@
   },
   "dependencies": {
     "feather-icons": "^4.29.2",
+    "idb": "^8.0.3",
     "leaflet": "^1.9.4",
     "sweetalert2": "^11.26.3",
     "webpack-merge": "^6.0.1",

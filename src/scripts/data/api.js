@@ -50,7 +50,7 @@ const ApiSource = {
   },
 
   async addNewStory(storyData) {
-    const token = Auth.getToken();
+   const token = Auth.getToken();
     if (!token) {
       throw new Error("401 (Unauthorized)");
     }
@@ -127,7 +127,7 @@ const ApiSource = {
   },
 
   async sendSubscription(subscriptionData) {
-    const token = Auth.getToken(); 
+    const token = Auth.getToken();
     if (!token) {
       console.warn("User tidak login, subscription tidak dikirim.");
       return;
@@ -138,7 +138,7 @@ const ApiSource = {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`, 
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify(subscriptionData),
       });
@@ -162,17 +162,17 @@ const ApiSource = {
     const token = Auth.getToken();
     if (!token) {
       console.warn("Tidak ada token, tidak bisa unsubscribe.");
-      return false; 
+      return false;
     }
 
     try {
       const response = await fetch(API_ENDPOINT.NOTIFICATIONS_SUBSCRIBE, {
-        method: "DELETE", 
+        method: "DELETE",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ endpoint: endpoint }), 
+        body: JSON.stringify({ endpoint: endpoint }),
       });
 
       const responseJson = await response.json();
@@ -181,10 +181,10 @@ const ApiSource = {
       }
 
       console.log("Unsubscribe dari server berhasil:", responseJson.message);
-      return true; 
+      return true;
     } catch (error) {
       console.error("Gagal unsubscribe dari server:", error);
-      return false; 
+      return false;
     }
   },
 };

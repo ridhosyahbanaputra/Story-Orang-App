@@ -166,6 +166,13 @@ document.addEventListener("DOMContentLoaded", async () => {
       subscribeButton.disabled = false;
     });
   }
+  
+  if ('serviceWorker' in navigator && 'SyncManager' in window) {
+    if (navigator.onLine) {
+      await swRegistration.sync.register('sync-pending-stories');
+    }
+  }
+
 });
 
 window.addEventListener("hashchange", async () => {

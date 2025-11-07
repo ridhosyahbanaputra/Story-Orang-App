@@ -1,10 +1,9 @@
-// Di dalam: src/scripts/pages/readMore/readMore-page.js (LENGKAP & BERSIH)
-
 import { parseActivePathname } from "../../routes/url-parser";
 import { initDetailPageMap } from "../../utils/maps";
-import { showFormattedDate } from "../../utils/index";
+import { showFormattedDate } from "../../utils/index.js"; 
 import getPlaceName from "../../data/placeName-api";
 import ApiSource from "../../data/api";
+import DbHelper from "../../utils/db-helper"; 
 
 import Leaflet from "leaflet";
 import "leaflet/dist/leaflet.css";
@@ -29,24 +28,18 @@ class ReadMorePage {
     return `
      <div class="read-more-container">
         <article class="story-detail">
-
-        
-        <div class="story-header">
-            
+          <div class="story-header">
             <div class="author-info">
               <h1 class="story-author" id="story-author"></h1>
               <p class="story-date-detail" id="story-date"></p>
             </div>
-            
             <button id="story-mark-button" class="btn-story-mark">
-              </button>
+            </button>
           </div>
           <img id="story-image" class="story-detail-image" src="" alt="Memuat gambar cerita..." style="display: none;">
-          
           <div class="story-content">
             <p id="story-body">...</p>
           </div>
-
           <div class="story-location">
             <h2>Lokasi Cerita</h2>
             <div id="map"></div>
@@ -64,7 +57,7 @@ class ReadMorePage {
     try {
       const url = parseActivePathname();
       const storyId = url.id;
-      const story = await ApiSource.getStoryDetail(storyId);
+      const story = await ApiSource.getStoryDetail(storyId); 
 
       const authorEl = document.getElementById("story-author");
       if (authorEl) authorEl.innerText = story.name;
@@ -81,9 +74,11 @@ class ReadMorePage {
 
       const dateEl = document.getElementById("story-date");
       if (dateEl) {
-        dateEl.innerText = showFormattedDate(story.createdAt, "id-ID");
-      } else {
-        console.warn('Elemen ID "story-date" tidak ditemukan');
+        if (story.createdAt) {
+          dateEl.innerText = showFormattedDate(story.createdAt, "id-ID");
+        } else {
+          dateEl.innerText = "Tanggal tidak tersedia"; 
+        }
       }
 
       const placeName = await getPlaceName.getCityName(story.lat, story.lon);
@@ -104,13 +99,14 @@ class ReadMorePage {
 
       const storyMarkButton = document.getElementById("story-mark-button");
 
-      const isStoryMarked = () => {
-        const marks = JSON.parse(localStorage.getItem("storyMarks")) || [];
-        return marks.includes(storyId);
+      const isStoryMarked = async () => {
+        const storyInDb = await DbHelper.getStory(storyId);
+        return !!storyInDb;
       };
 
-      const updateButtonUI = () => {
-        if (isStoryMarked()) {
+      const updateButtonUI = async () => {
+        const isMarked = await isStoryMarked();
+        if (isMarked) {
           storyMarkButton.innerHTML = `${feather.icons["bookmark"].toSvg({
             fill: "currentColor",
           })}`;
@@ -121,31 +117,32 @@ class ReadMorePage {
         }
       };
 
-      const toggleStoryMark = () => {
-        let marks = JSON.parse(localStorage.getItem("storyMarks")) || [];
-        if (isStoryMarked()) {
-          marks = marks.filter((id) => id !== storyId);
+      const toggleStoryMark = async () => {
+        const isMarked = await isStoryMarked();
+
+        if (isMarked) {
+          await DbHelper.deleteStory(storyId);
           Swal.fire({
-            icon: "success",
-            title: "Story Dihapus",
+            icon: "info",
+            title: "Story Mark Dihapus",
             timer: 1500,
             showConfirmButton: false,
           });
         } else {
-          marks.push(storyId);
+          await DbHelper.putStory(story); 
           Swal.fire({
             icon: "success",
-            title: "Story Disimpan!",
+            title: "Cerita Disimpan!",
             timer: 1500,
             showConfirmButton: false,
           });
         }
-        localStorage.setItem("storyMarks", JSON.stringify(marks));
-        updateButtonUI();
+        updateButtonUI(); 
       };
 
       updateButtonUI();
       storyMarkButton.addEventListener("click", toggleStoryMark);
+
       window.scrollTo(0, 0);
     } catch (apiError) {
       console.error("Gagal mengambil detail story:", apiError);

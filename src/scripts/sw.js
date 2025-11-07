@@ -1,126 +1,159 @@
 import { precacheAndRoute } from "workbox-precaching";
 import { registerRoute } from "workbox-routing";
-import { NetworkFirst, StaleWhileRevalidate } from "workbox-strategies";
 import { CacheableResponsePlugin } from "workbox-cacheable-response";
 import { ExpirationPlugin } from "workbox-expiration";
+import {
+  NetworkFirst,
+  CacheFirst,
+  StaleWhileRevalidate,
+} from "workbox-strategies";
+
+import DbHelper from "./utils/db-helper";
 
 const API_BASE_URL = "https://story-api.dicoding.dev/v1";
-const CACHE_NAME_API = "story-api-cache-v2";
-const CACHE_NAME_ASSETS = "story-assets-cache-v2";
-const CACHE_NAME_STORY_DETAIL = "story-detail-cache-v2";
+
+const API_ENDPOINT = {
+  ADD_NEW_STORY: `${API_BASE_URL}/stories`,
+};
 
 precacheAndRoute(self.__WB_MANIFEST);
 
-self.addEventListener("activate", (event) => {
-  event.waitUntil(
-    caches.keys().then((cacheNames) => {
-      return Promise.all(
-        cacheNames
-          .filter(
-            (name) =>
-              name !== CACHE_NAME_API &&
-              name !== CACHE_NAME_ASSETS &&
-              name !== CACHE_NAME_STORY_DETAIL &&
-              !name.startsWith("workbox-precache")
-          )
-          .map((name) => caches.delete(name))
-      );
-    })
-  );
+self.addEventListener("sync", (event) => {
+  console.log("[SW] Menerima event Sync:", event.tag);
+  if (event.tag === "sync-pending-stories") {
+    event.waitUntil(syncPendingStories());
+  }
 });
 
+const syncPendingStories = async () => {
+  console.log("[SW] Memulai sinkronisasi cerita tertunda...");
 
-registerRoute(
-  ({ url, request }) =>
-    url.origin === new URL(API_BASE_URL).origin &&
-    url.pathname.startsWith("/stories/") &&
-    request.method === "GET",
-  new NetworkFirst({
-    cacheName: CACHE_NAME_STORY_DETAIL,
-    networkTimeoutSeconds: 5,
-    plugins: [
-      new CacheableResponsePlugin({ statuses: [0, 200] }),
-      new ExpirationPlugin({ maxEntries: 100, maxAgeSeconds: 24 * 60 * 60 }),
-    ],
-  })
-);
+  const token = await DbHelper.getToken();
+  if (!token) {
+    console.error(
+      "[SW] Gagal sync: Token tidak ditemukan di IndexedDB. Silakan login kembali."
+    );
+    return; 
+  }
 
-registerRoute(
-  ({ url, request }) =>
-    url.origin === new URL(API_BASE_URL).origin &&
-    url.pathname === "/stories" && 
-    request.method === "GET",
-  new NetworkFirst({
-    cacheName: CACHE_NAME_API,
-    networkTimeoutSeconds: 5,
-    plugins: [
-      new CacheableResponsePlugin({ statuses: [0, 200] }),
-      new ExpirationPlugin({ maxEntries: 50, maxAgeSeconds: 24 * 60 * 60 }),
-    ],
-  })
-);
+  const pendingStories = await DbHelper.getAllPendingStories();
+  if (pendingStories.length === 0) {
+    console.log("[SW] Tidak ada cerita tertunda untuk di-sync.");
+    return;
+  }
 
-registerRoute(
-  ({ request }) =>
-    request.destination === "style" ||
-    request.destination === "script" ||
-    request.destination === "image" ||
-    request.destination === "font",
-  new StaleWhileRevalidate({
-    cacheName: CACHE_NAME_ASSETS,
-  })
-);
-
-
-self.addEventListener("push", (event) => {
-  let notificationTitle = "Story App";
-  let notificationOptions = {
-    body: "Ada notifikasi baru dari Story App!",
-    icon: "/images/logo.png",
-    badge: "/images/logo.png",
-    data: { url: "/" },
-    actions: [],
-  };
-
-  if (event.data) {
+  for (const story of pendingStories) {
     try {
-      const pushData = event.data.json();
-      if (pushData.title && pushData.title === "Story berhasil dibuat") {
-        return;
+      const formData = new FormData();
+      formData.append("description", story.description);
+      formData.append("photo", story.photo); 
+      formData.append("lat", story.lat);
+      formData.append("lon", story.lon);
+
+      const response = await fetch(API_ENDPOINT.ADD_NEW_STORY, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`, 
+        },
+        body: formData,
+      });
+
+      if (!response.ok) {
+        throw new Error(
+          `API error: ${response.status} - ${response.statusText}`
+        );
       }
 
-      notificationTitle = pushData.title || notificationTitle;
-      notificationOptions = { ...notificationOptions, ...pushData.options };
+      console.log(`[SW] Cerita (ID: ${story.id}) berhasil dikirim ke API.`);
 
-      if (notificationOptions.body && notificationOptions.body.length > 100) {
-        notificationOptions.body =
-          notificationOptions.body.substring(0, 97) + "...";
-      }
+      await DbHelper.deletePendingStory(story.id);
     } catch (error) {
-      notificationOptions.body = event.data.text();
+      console.error(
+        `[SW] Gagal mengirim cerita (ID: ${story.id}). Error:`,
+        error
+      );
     }
   }
 
-  const targetUrl = notificationOptions.data.url || "/";
-  const hasReadActionButton = notificationOptions.actions.some(
-    (action) => action.title === "Baca Cerita"
-  );
+  console.log("[SW] Sinkronisasi selesai.");
 
-  if (!hasReadActionButton && targetUrl !== "/") {
-    notificationOptions.actions.push({
-      action: targetUrl,
-      title: "Baca Cerita",
-    });
-  }
+  self.registration.showNotification("Sync Selesai", {
+    body: `Semua cerita offline Anda berhasil di-upload!`,
+    icon: "/images/logo.png",
+  });
+};
+registerRoute(
+  ({ url }) =>
+    url.origin === "https://fonts.googleapis.com" ||
+    url.origin === "https://fonts.gstatic.com",
+  new CacheFirst({
+    cacheName: "google-fonts",
+  })
+);
 
+registerRoute(
+  ({ url }) =>
+    url.origin.includes("fontawesome") ||
+    url.origin === "https://cdnjs.cloudflare.com",
+  new CacheFirst({
+    cacheName: "fontawesome",
+  })
+);
+
+registerRoute(
+  ({ url }) => url.origin === "https://ui-avatars.com",
+  new CacheFirst({
+    cacheName: "avatars-api",
+    plugins: [new CacheableResponsePlugin({ statuses: [0, 200] })],
+  })
+);
+
+registerRoute(
+  ({ url, request }) => {
+    return (
+      url.origin === new URL(API_BASE_URL).origin && request.method === "GET"
+    );
+  },
+  new NetworkFirst({
+    cacheName: "story-api-cache",
+    networkTimeoutSeconds: 5,
+    plugins: [
+      new CacheableResponsePlugin({ statuses: [0, 200] }),
+      new ExpirationPlugin({
+        maxEntries: 50,
+        maxAgeSeconds: 24 * 60 * 60,
+      }),
+    ],
+    matchOptions: {
+      ignoreSearch: true,
+      ignoreVary: true,
+    },
+  })
+);
+
+registerRoute(
+  ({ url, request }) =>
+    url.origin === new URL(API_BASE_URL).origin &&
+    request.destination === "image",
+  new StaleWhileRevalidate({
+    cacheName: "story-api-images",
+    plugins: [new CacheableResponsePlugin({ statuses: [0, 200] })],
+  })
+);
+
+registerRoute(
+  ({ url }) => url.origin.includes("maptiler"),
+  new CacheFirst({
+    cacheName: "maptiler-api",
+  })
+);
+
+self.addEventListener("push", (event) => {
+  console.log("[Service Worker] Push received.");
+  const data = event.data.json();
   event.waitUntil(
-    self.registration.showNotification(notificationTitle, notificationOptions)
+    self.registration.showNotification(data.title, {
+      body: data.options.body,
+    })
   );
-});
-
-self.addEventListener("notificationclick", (event) => {
-  event.notification.close();
-  const targetUrl = event.action || event.notification.data.url || "/";
-
-  event.waitUntil(clients.openWindow(targetUrl));
 });
