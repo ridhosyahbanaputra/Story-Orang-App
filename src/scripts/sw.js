@@ -11,12 +11,28 @@ import {
 import DbHelper from "./utils/db-helper";
 
 const API_BASE_URL = "https://story-api.dicoding.dev/v1";
-
 const API_ENDPOINT = {
   ADD_NEW_STORY: `${API_BASE_URL}/stories`,
 };
 
 precacheAndRoute(self.__WB_MANIFEST);
+
+self.addEventListener("install", (event) => {
+  console.log("[SW] Installing... skipWaiting dipanggil");
+  self.skipWaiting();
+});
+
+self.addEventListener("activate", (event) => {
+  console.log("[SW] Activated");
+  event.waitUntil(clients.claim());
+});
+
+self.addEventListener("message", (event) => {
+  if (event.data && event.data.type === "SKIP_WAITING") {
+    console.log("[SW] skipWaiting dipanggil via postMessage");
+    self.skipWaiting();
+  }
+});
 
 self.addEventListener("sync", (event) => {
   console.log("[SW] Menerima event Sync:", event.tag);
@@ -128,11 +144,8 @@ registerRoute(
 );
 
 registerRoute(
-  ({ url, request }) => {
-    return (
-      url.origin === new URL(API_BASE_URL).origin && request.method === "GET"
-    );
-  },
+  ({ url, request }) =>
+    url.origin === new URL(API_BASE_URL).origin && request.method === "GET",
   new NetworkFirst({
     cacheName: "story-api-cache",
     networkTimeoutSeconds: 5,
