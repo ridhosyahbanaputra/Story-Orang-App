@@ -7,6 +7,9 @@ const { InjectManifest } = require("workbox-webpack-plugin");
 const path = require("path");
 module.exports = merge(common, {
   mode: "production",
+  output: {
+    publicPath: "/Story-Orang-App/",
+  },
   module: {
     rules: [
       {

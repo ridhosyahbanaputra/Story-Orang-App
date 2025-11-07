@@ -10,6 +10,10 @@ const serviceWorkerRegister = async () => {
       } else if (registration.active) {
         console.log('Service worker: Aktif');
       }
+
+      await navigator.serviceWorker.ready;
+      console.log('Service Worker sudah siap digunakan.');
+
       return registration;
     } catch (error) {
       console.error(`Registrasi Service Worker gagal: ${error}`);

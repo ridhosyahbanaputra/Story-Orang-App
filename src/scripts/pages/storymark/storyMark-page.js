@@ -11,7 +11,7 @@ class StoryMarkPage {
         <div class="story-list-panel">
           <h1>Story Tersimpan</h1>
           <div class="search-container">
-            <input type="search" id="search-bar" placeholder="Cari berdasarkan judul atau deskripsi...">
+            <input for="search-bar" type="search" id="search-bar" placeholder="Cari berdasarkan judul atau deskripsi...">
           </div>
          <div id="saved-stories-list" class="story-list-content">
             </div>

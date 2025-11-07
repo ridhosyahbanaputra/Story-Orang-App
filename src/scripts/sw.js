@@ -33,7 +33,7 @@ const syncPendingStories = async () => {
     console.error(
       "[SW] Gagal sync: Token tidak ditemukan di IndexedDB. Silakan login kembali."
     );
-    return; 
+    return;
   }
 
   const pendingStories = await DbHelper.getAllPendingStories();
@@ -46,14 +46,14 @@ const syncPendingStories = async () => {
     try {
       const formData = new FormData();
       formData.append("description", story.description);
-      formData.append("photo", story.photo); 
+      formData.append("photo", story.photo);
       formData.append("lat", story.lat);
       formData.append("lon", story.lon);
 
       const response = await fetch(API_ENDPOINT.ADD_NEW_STORY, {
         method: "POST",
         headers: {
-          Authorization: `Bearer ${token}`, 
+          Authorization: `Bearer ${token}`,
         },
         body: formData,
       });
@@ -149,11 +149,54 @@ registerRoute(
 );
 
 self.addEventListener("push", (event) => {
-  console.log("[Service Worker] Push received.");
-  const data = event.data.json();
+  console.log("Service Worker: Push Event Diterima!");
+
+  let notificationTitle = "Story App";
+  let notificationOptions = {
+    body: "Ada notifikasi baru dari Story App!",
+    icon: "/images/logo.png",
+    badge: "/images/logo.png",
+    data: { url: "/" },
+    actions: [],
+  };
+
+  if (event.data) {
+    try {
+      const pushData = event.data.json();
+
+      if (pushData.title && pushData.title === "Story berhasil dibuat") {
+        return;
+      }
+
+      notificationTitle = pushData.title || notificationTitle;
+      notificationOptions = {
+        ...notificationOptions,
+        ...pushData.options,
+      };
+
+      if (notificationOptions.body && notificationOptions.body.length > 100) {
+        notificationOptions.body =
+          notificationOptions.body.substring(0, 97) + "...";
+      }
+    } catch (error) {
+      console.warn("Data push bukan JSON, menampilkan sebagai teks biasa.");
+      notificationOptions.body = event.data.text();
+    }
+  }
+
+  const targetUrl = notificationOptions.data.url || "/";
+  const hasReadActionButton = notificationOptions.actions.some(
+    (action) => action.title === "Baca Cerita"
+  );
+
+  if (!hasReadActionButton && targetUrl !== "/") {
+    notificationOptions.actions.push({
+      action: targetUrl,
+      title: "Baca Cerita",
+    });
+  }
+
   event.waitUntil(
-    self.registration.showNotification(data.title, {
-      body: data.options.body,
-    })
+    self.registration.showNotification(notificationTitle, notificationOptions)
   );
 });
