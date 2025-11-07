@@ -46,7 +46,10 @@ const syncPendingStories = async () => {
     try {
       const formData = new FormData();
       formData.append("description", story.description);
-      formData.append("photo", story.photo);
+
+      const blobPhoto = base64ToBlob(story.photo);
+      formData.append("photo", blobPhoto, `photo-${story.id}.jpg`);
+
       formData.append("lat", story.lat);
       formData.append("lon", story.lon);
 
@@ -65,7 +68,6 @@ const syncPendingStories = async () => {
       }
 
       console.log(`[SW] Cerita (ID: ${story.id}) berhasil dikirim ke API.`);
-
       await DbHelper.deletePendingStory(story.id);
     } catch (error) {
       console.error(
@@ -82,6 +84,23 @@ const syncPendingStories = async () => {
     icon: "/images/logo.png",
   });
 };
+
+function base64ToBlob(base64) {
+  try {
+    const byteString = atob(base64.split(",")[1]);
+    const mimeString = base64.split(",")[0].split(":")[1].split(";")[0];
+    const ab = new ArrayBuffer(byteString.length);
+    const ia = new Uint8Array(ab);
+    for (let i = 0; i < byteString.length; i++) {
+      ia[i] = byteString.charCodeAt(i);
+    }
+    return new Blob([ab], { type: mimeString });
+  } catch (e) {
+    console.error("[SW] Gagal konversi base64 → Blob:", e);
+    return null;
+  }
+}
+
 registerRoute(
   ({ url }) =>
     url.origin === "https://fonts.googleapis.com" ||

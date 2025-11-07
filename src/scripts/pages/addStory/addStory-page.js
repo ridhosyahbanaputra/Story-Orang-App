@@ -75,7 +75,6 @@ class AddStory {
     let capturedFiles = [];
 
     const storyForm = document.querySelector("#storyForm");
-    const submitButton = document.querySelector("#submitButton"); 
     const storyPhotoInput = document.querySelector("#storyPhotoInput");
     const galleryButton = document.querySelector("#galleryButton");
     const thumbnailPreview = document.querySelector("#thumbnailPreview");
@@ -121,9 +120,7 @@ class AddStory {
       });
     };
 
-    galleryButton.addEventListener("click", () => {
-      storyPhotoInput.click();
-    });
+    galleryButton.addEventListener("click", () => storyPhotoInput.click());
     storyPhotoInput.addEventListener("change", () => {
       if (storyPhotoInput.files && storyPhotoInput.files[0]) {
         capturedFiles.push(storyPhotoInput.files[0]);
@@ -150,18 +147,31 @@ class AddStory {
     this.#cameraManager.init();
     window.myStoryCamera = this.#cameraManager;
 
+    const convertToBase64 = (file) => {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+    };
+
     storyForm.addEventListener("submit", async (event) => {
       event.preventDefault();
 
       if (capturedFiles.length === 0) {
-        Swal.fire({ icon: "warning", title: "Foto Kosong", text: "..." });
+        Swal.fire({
+          icon: "warning",
+          title: "Foto Kosong",
+          text: "Silakan ambil atau pilih foto terlebih dahulu.",
+        });
         return;
       }
 
       const description = document.querySelector("#storyDescription").value;
       const lat = latInput.value;
       const lon = lonInput.value;
-      const photo = capturedFiles[0]; 
+      const photo = capturedFiles[0];
 
       Swal.fire({
         title: "Memproses...",
@@ -180,28 +190,29 @@ class AddStory {
           formData.append("lon", parseFloat(lon));
 
           await ApiSource.addNewStory(formData);
-
           sessionStorage.setItem(
             "storySuccessMessage",
             "Cerita Anda berhasil dipublikasikan!"
           );
         } else {
-          console.log(
-            "Status: Offline. Menyimpan ke IndexedDB (Pending Stories)."
-          );
+          console.log("Status: Offline. Menyimpan ke IndexedDB...");
+
+          const base64Photo = await convertToBase64(photo);
 
           const storyData = {
-            id: new Date().toISOString(), 
-            description: description,
-            photo: photo, 
+            id: new Date().toISOString(),
+            description,
+            photo: base64Photo,
             lat: parseFloat(lat),
             lon: parseFloat(lon),
           };
+
           await DbHelper.addPendingStory(storyData);
 
           if ("serviceWorker" in navigator && "SyncManager" in window) {
             const swRegistration = await navigator.serviceWorker.ready;
             await swRegistration.sync.register("sync-pending-stories");
+            console.log("✅ SyncManager: 'sync-pending-stories' didaftarkan");
           }
 
           sessionStorage.setItem(
