@@ -18,7 +18,7 @@ const API_ENDPOINT = {
 precacheAndRoute(self.__WB_MANIFEST);
 
 self.addEventListener("install", (event) => {
-  console.log("[SW] Installing... skipWaiting dipanggil");
+  console.log("[SW] Installing... memanggil skipWaiting");
   self.skipWaiting();
 });
 
@@ -46,9 +46,7 @@ const syncPendingStories = async () => {
 
   const token = await DbHelper.getToken();
   if (!token) {
-    console.error(
-      "[SW] Gagal sync: Token tidak ditemukan di IndexedDB. Silakan login kembali."
-    );
+    console.error("[SW] Gagal sync: Token tidak ditemukan di IndexedDB.");
     return;
   }
 
@@ -121,18 +119,14 @@ registerRoute(
   ({ url }) =>
     url.origin === "https://fonts.googleapis.com" ||
     url.origin === "https://fonts.gstatic.com",
-  new CacheFirst({
-    cacheName: "google-fonts",
-  })
+  new CacheFirst({ cacheName: "google-fonts" })
 );
 
 registerRoute(
   ({ url }) =>
     url.origin.includes("fontawesome") ||
     url.origin === "https://cdnjs.cloudflare.com",
-  new CacheFirst({
-    cacheName: "fontawesome",
-  })
+  new CacheFirst({ cacheName: "fontawesome" })
 );
 
 registerRoute(
@@ -151,15 +145,9 @@ registerRoute(
     networkTimeoutSeconds: 5,
     plugins: [
       new CacheableResponsePlugin({ statuses: [0, 200] }),
-      new ExpirationPlugin({
-        maxEntries: 50,
-        maxAgeSeconds: 24 * 60 * 60,
-      }),
+      new ExpirationPlugin({ maxEntries: 50, maxAgeSeconds: 24 * 60 * 60 }),
     ],
-    matchOptions: {
-      ignoreSearch: true,
-      ignoreVary: true,
-    },
+    matchOptions: { ignoreSearch: true, ignoreVary: true },
   })
 );
 
@@ -175,9 +163,7 @@ registerRoute(
 
 registerRoute(
   ({ url }) => url.origin.includes("maptiler"),
-  new CacheFirst({
-    cacheName: "maptiler-api",
-  })
+  new CacheFirst({ cacheName: "maptiler-api" })
 );
 
 self.addEventListener("push", (event) => {
@@ -201,10 +187,7 @@ self.addEventListener("push", (event) => {
       }
 
       notificationTitle = pushData.title || notificationTitle;
-      notificationOptions = {
-        ...notificationOptions,
-        ...pushData.options,
-      };
+      notificationOptions = { ...notificationOptions, ...pushData.options };
 
       if (notificationOptions.body && notificationOptions.body.length > 100) {
         notificationOptions.body =
