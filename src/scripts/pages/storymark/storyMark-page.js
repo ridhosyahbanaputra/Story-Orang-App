@@ -11,7 +11,8 @@ class StoryMarkPage {
         <div class="story-list-panel">
           <h1>Story Tersimpan</h1>
           <div class="search-container">
-            <input for="search-bar" type="search" id="search-bar" placeholder="Cari berdasarkan judul atau deskripsi...">
+          <label for="search-bar" class="sr-only">Cari berdasarkan judul atau deskripsi</label>
+            <input type="search" id="search-bar" placeholder="Cari...">
           </div>
          <div id="saved-stories-list" class="story-list-content">
             </div>
@@ -21,7 +22,6 @@ class StoryMarkPage {
   }
 
   async afterRender() {
-
     const listContainer = document.querySelector("#saved-stories-list");
     const searchBar = document.querySelector("#search-bar");
     listContainer.innerHTML = "<p>Memuat cerita yang Anda tandai...</p>";
