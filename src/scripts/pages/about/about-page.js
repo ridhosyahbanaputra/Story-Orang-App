@@ -59,11 +59,11 @@ class AboutPage {
 
             <div class="about-visuals">
               <div class="logo-item">
-                <img src="/images/logo.png" alt="Website Logo">
+                <img src="../../../public/images/logo.png" alt="Website Logo">
                 <p>Website Logo</p>
               </div>
               <div class="logo-item">
-                <img src="/images/AppLogo.png" alt="Application Logo">
+                <img src="../../../public/images/AppLogo.png" alt="Application Logo">
                 <p>Application Logo</p>
               </div>
             </div>

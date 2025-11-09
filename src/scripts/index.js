@@ -120,7 +120,7 @@ async function updateSubscriptionButton(swRegistration, button) {
   const subscription = await swRegistration.pushManager.getSubscription();
 
   if (subscription) {
-    button.innerHTML = "<span>Unsubsrcibe</span>" + feather.icons.bell.toSvg();
+    button.innerHTML = "<span>Unsubscribe</span>" + feather.icons.bell.toSvg();
     button.dataset.state = "subscribed";
   } else {
     button.innerHTML =
